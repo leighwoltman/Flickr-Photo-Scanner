@@ -1,7 +1,5 @@
-# PDF-Scanning-App
+# Flickr-Photo-Scanner
 
-Using ZenHub for issue tracking which needs a browser plugin installed: https://www.zenhub.io/
+Simple application for scanning pictures and directly uploading them to Flickr. This is meant to have minimal options in order to be simple.
 
-Simple application for scanning directly to PDF and more....
-
-![alt tag](https://raw.githubusercontent.com/leighwoltman/PDF-Scanning-App/master/Resources/Screenshot.png)
+This application only interfaces with Flickr, but is in no way associated or supported by Flickr or Yahoo.

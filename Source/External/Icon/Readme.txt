@@ -1,5 +1,10 @@
-Downloaded on 2016-01-22 from:
+Downloaded on 2016-09-14 from:
 
-http://www.iconarchive.com/show/tulliana-2-icons-by-umut-pulat/scanner-icon.html
+http://www.iconarchive.com/show/aire-icons-by-gakuseisean/Images-icon.html
 
-Listed as being licensed under: GNU Lesser General Public License
+Listed as being licensed under: 
+
+Artist: Sean Poon
+Iconset: Aire Icons (57 icons)
+License: Free for personal desktop use only.
+Commercial usage: Not allowed
