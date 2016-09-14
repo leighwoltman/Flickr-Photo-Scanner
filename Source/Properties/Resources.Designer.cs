@@ -63,9 +63,9 @@ namespace PDFScanningApp.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
-        internal static System.Drawing.Icon Umut_Pulat_Tulliana_2_Scanner {
+        internal static System.Drawing.Icon Gakuseisean_Aire_Images {
             get {
-                object obj = ResourceManager.GetObject("Umut_Pulat_Tulliana_2_Scanner", resourceCulture);
+                object obj = ResourceManager.GetObject("Gakuseisean-Aire-Images", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }

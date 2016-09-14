@@ -31,8 +31,7 @@ namespace Model
     private InterfaceDataSourceManager fWia;
     private List<InterfaceDataSource> fDataSources;
     private InterfaceDataSource fActiveDataSource;
-    private Document fDocument;
-
+    private NewPictureEventArgs args;
 
     public Scanner()
     {
@@ -40,6 +39,7 @@ namespace Model
       fWia = new WiaDataSourceManager();
       fDataSources = null;
       fActiveDataSource = null;
+      args = null;
     }
 
 
@@ -170,18 +170,17 @@ namespace Model
     }
 
 
-    public delegate void AcquireCallback(bool success);
+    public delegate void AcquireCallback(Image theImage);
 
-    public void Acquire(Document document, ScanSettings settings, AcquireCallback callback)
+    public void Acquire(ScanSettings settings, AcquireCallback callback)
     {
       if(fActiveDataSource != null)
       {
-        fDocument = document;
         OnScanningComplete = callback;
 
         if(fActiveDataSource.Acquire(settings) == false)
         {
-          Raise_OnScanningComplete(false);
+          Raise_OnScanningComplete(args.TheImage);
         }
       }
     }
@@ -189,25 +188,23 @@ namespace Model
 
     private void fActiveDataSource_OnNewPictureData(object sender, EventArgs e)
     {
-      NewPictureEventArgs args = (NewPictureEventArgs)e;
-      Page myPage = new PageFromScanner(args.TheImage, args.TheSettings.Resolution);
-      fDocument.AddPage(myPage);
+      args = (NewPictureEventArgs)e;
     }
 
 
     private void fActiveDataSource_OnScanningComplete(object sender, EventArgs e)
     {
-      Raise_OnScanningComplete(true);
+      Raise_OnScanningComplete(args.TheImage);
     }
 
 
     private AcquireCallback OnScanningComplete;
 
-    private void Raise_OnScanningComplete(bool success)
+    private void Raise_OnScanningComplete(Image theImage)
     {
       if(OnScanningComplete != null)
       {
-        OnScanningComplete(success);
+        OnScanningComplete(theImage);
       }
     }
   }

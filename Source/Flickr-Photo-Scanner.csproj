@@ -27,18 +27,12 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>External\Icon\Umut-Pulat-Tulliana-2-Scanner.ico</ApplicationIcon>
+    <ApplicationIcon>
+    </ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Cyotek.Windows.Forms.ImageBox">
       <HintPath>External\ImageBox\Cyotek.Windows.Forms.ImageBox.dll</HintPath>
-    </Reference>
-    <Reference Include="PdfiumDotNetWrapper, Version=1.0.6052.39597, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>External\Pdfium\PdfiumDotNetWrapper.dll</HintPath>
-    </Reference>
-    <Reference Include="PdfSharp">
-      <HintPath>External\PDFsharp\PdfSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -60,6 +54,10 @@
     <Compile Include="FormMain.Designer.cs">
       <DependentUpon>FormMain.cs</DependentUpon>
     </Compile>
+    <Compile Include="Imports.LibDefines.cs" />
+    <Compile Include="Imports.LibGdi32.cs" />
+    <Compile Include="Imports.LibKernel32.cs" />
+    <Compile Include="Imports.LibUser32.cs" />
     <Compile Include="Model.Scanner.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
