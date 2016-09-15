@@ -11,6 +11,7 @@ using Model;
 using Defines;
 using Utils;
 using FlickrNet;
+using System.Text.RegularExpressions;
 
 
 namespace PDFScanningApp
@@ -21,7 +22,11 @@ namespace PDFScanningApp
     private Scanner fScanner;
     private bool fClosing;
     private bool fDeleting;
-    private Flickr fFlickr;
+    
+    private Queue<QueuedMessage> messageQueue;
+    private Worker myWorker;
+    private System.Windows.Forms.Timer myTimer;
+    private List<Album> albumList;
 
     // Special UI
     private Cyotek.Windows.Forms.ImageBox PictureBoxPreview;
@@ -30,7 +35,13 @@ namespace PDFScanningApp
     public FormMain()
     {
       InitializeComponent();
+
+      PauseControls();
+      progressBarUploading.Visible = false;
+
       this.Text = AppInfo.GetApplicationName();
+
+      albumList = null;
 
       // Create PictureBoxPreview from special component;
       this.PictureBoxPreview = new Cyotek.Windows.Forms.ImageBox();
@@ -47,24 +58,90 @@ namespace PDFScanningApp
       fClosing = false;
       fDeleting = false;
 
-      fFlickr = FlickrManager.GetInstance(fAppSettings);
+      messageQueue = new Queue<QueuedMessage>();
 
-      // try to see if this is active
-      try
+      myWorker = new Worker(this, fAppSettings);
+      Thread workerThread = new Thread(myWorker.Run);
+      workerThread.Start();
+
+      myTimer = new System.Windows.Forms.Timer();
+      myTimer.Interval = 500;
+      myTimer.Tick += myTimer_Tick;
+      myTimer.Start();
+    }
+
+
+    void myTimer_Tick(object sender, EventArgs e)
+    {
+      myTimer.Stop();
+
+      QueuedMessage msgToProcess = null;
+
+      lock (messageQueue)
       {
-        PhotosetCollection col = fFlickr.PhotosetsGetList();
-        MessageBox.Show(col.Count.ToString());
+        if(messageQueue.Count > 0)
+        {
+          msgToProcess = messageQueue.Dequeue();
+        }
       }
-      catch(Exception FlickrException)
+
+      if(msgToProcess != null)
       {
-        MessageBox.Show(FlickrException.Message);
+        switch(msgToProcess.msg)
+        {
+          case "AUTHENTICATE":
+            {
+              FormAuthenticate formAuth = new FormAuthenticate((string)msgToProcess.payload);
+              DialogResult result = formAuth.ShowDialog();
+              myWorker.EnqueueMessage(new QueuedMessage("AUTHENTICATION_KEY", formAuth.responseCode));
+            }
+            break;
+
+          case "STATUS":
+            {
+              RefreshControls((UIStatus)msgToProcess.payload);
+            }
+            break;
+
+          case "ALBUM_LIST":
+            {
+              albumList = (List<Album>)msgToProcess.payload;
+
+              // populate the dropdown
+              comboBoxAlbum.Items.Clear();
+              foreach(Album a in albumList)
+              {
+                comboBoxAlbum.Items.Add(a);
+              }
+            }
+            break;
+
+          case "SCANNED_IMAGE_RETURN":
+            {
+              Image img = (Image)msgToProcess.payload;
+              PictureBoxPreview.Image = img;
+              PictureBoxPreview.ZoomToFit();
+            }
+            break;
+        }
+      }
+
+      myTimer.Start();
+    }
+
+
+    public void EnqueueMessage(QueuedMessage msgToQueue)
+    {
+      lock (messageQueue)
+      {
+        messageQueue.Enqueue(msgToQueue);
       }
     }
 
 
     private void FormMain_Load(object sender, EventArgs e)
     {
-      RefreshControls();
+      RefreshControls(null);
 
       fScanner.Open(fScanner_OpenCallback);
     }
@@ -93,6 +170,7 @@ namespace PDFScanningApp
     {
       if (fClosing == false)
       {
+        myWorker.Stop();
         fClosing = true;
         e.Cancel = true;
         fScanner.Close(fScanner_CloseCallback);
@@ -119,26 +197,110 @@ namespace PDFScanningApp
     {
       string selectedScanner = "";// (string)ComboBoxScanners.SelectedItem;
       fScanner.SetActiveDataSource(selectedScanner);
-      RefreshControls();
+      RefreshControls(null);
     }
 
 
-    void RefreshControls()
+    void RefreshControls(UIStatus status)
     {
+      if(status != null)
+      {
+        buttonUpload.Enabled = (status.authenticated && !status.uploading && status.scannedImage);
+        comboBoxAlbum.Enabled = (status.authenticated && (albumList != null));
+        textBoxNewAlbum.Enabled = (status.authenticated && !status.uploading);
+        buttonCreateAlbum.Enabled = (status.authenticated && !status.uploading);
+        buttonScan4x6.Enabled = (status.authenticated);
+        buttonScan3x5.Enabled = (status.authenticated);
+        buttonScanCustom.Enabled = (status.authenticated);
+        numericUpDownHeight.Enabled = (status.authenticated);
+        numericUpDownWidth.Enabled = (status.authenticated);
 
+        progressBarUploading.Visible = (status.uploading);
+      }
+
+      if(albumList == null)
+      {
+        if( (comboBoxAlbum.Items.Count == 1) && (comboBoxAlbum.Items[0] == "No Albums"))
+        {
+          // then we are good
+        }
+        else
+        {
+          comboBoxAlbum.Items.Clear();
+          comboBoxAlbum.Items.Add("No Albums");
+          comboBoxAlbum.SelectedIndex = 0;
+          comboBoxAlbum.Enabled = false;
+        }
+      }
     }
 
-    private void Scan(PageTypeEnum pageType)
+
+    void PauseControls()
     {
-      ScanSettings settings = new ScanSettings();
+      buttonUpload.Enabled = false;
+      comboBoxAlbum.Enabled = false;
+      textBoxNewAlbum.Enabled = false;
+      buttonCreateAlbum.Enabled = false;
+      buttonScan4x6.Enabled = false;
+      buttonScan3x5.Enabled = false;
+      buttonScanCustom.Enabled = false;
+      numericUpDownHeight.Enabled = false;
+      numericUpDownWidth.Enabled = false;
+    }
 
-      SizeInches size = SizeInches.Letter;
 
-      settings.ScanArea = new BoundsInches(0, 0, size);
+    private void Scan(SizeInches size)
+    {
+      List<string> scanners = fScanner.GetDataSourceNames();
 
-      settings.ShowTransferUI = true;
+      string selectedScanner = "";
 
-      fScanner.Acquire(settings, fScanner_AcquireCallback);
+      foreach(string scanner in scanners)
+      {
+        if( scanner.Contains("WIA") && scanner.Contains("EPSON") && scanner.Contains("Perfection V500") )
+        {
+          selectedScanner = scanner;
+        }
+      }
+
+      if (selectedScanner == "")
+      {
+        MessageBox.Show("Scanner not plugged in");
+      }
+      else
+      {
+        bool skip = false;
+
+        if(PictureBoxPreview.Image != null)
+        {
+          DialogResult result = MessageBox.Show("Scan next photo without uploading last?", "Remove Last", MessageBoxButtons.YesNo);
+
+          if(result != DialogResult.Yes)
+          {
+            skip = true;
+          }
+        }
+
+        if (!skip)
+        {
+          PauseControls();
+
+          fScanner.SetActiveDataSource(selectedScanner);
+
+          ScanSettings settings = new ScanSettings();
+
+          settings.ScanArea = new BoundsInches(0, 0, size);
+          settings.Brightness = 0.5;
+          settings.ColorMode = ColorModeEnum.RGB;
+          settings.Contrast = 0.5;
+          settings.EnableFeeder = false;
+          settings.Resolution = 600;
+          settings.ShowSettingsUI = false;
+          settings.ShowTransferUI = true;
+
+          fScanner.Acquire(settings, fScanner_AcquireCallback);
+        }
+      }
     }
 
 
@@ -146,8 +308,7 @@ namespace PDFScanningApp
     {
       if (theImage != null)
       {
-        // do something with the image
-        // TODO
+        myWorker.EnqueueMessage(new QueuedMessage("SCANNED_IMAGE", theImage));
       }
       else
       {
@@ -155,36 +316,67 @@ namespace PDFScanningApp
       }
     }
 
-
-    private void ButtonScanLetter_Click(object sender, EventArgs e)
+    private void buttonCreateAlbum_Click(object sender, EventArgs e)
     {
-      Scan(PageTypeEnum.Letter);
-      RefreshControls();
-    }
+      Regex rgx = new Regex("[^a-zA-Z0-9 -]");
+      textBoxNewAlbum.Text = rgx.Replace(textBoxNewAlbum.Text.Trim(), "");
 
-
-    private void ButtonScanLegal_Click(object sender, EventArgs e)
-    {
-      Scan(PageTypeEnum.Legal);
-      RefreshControls();
-    }
-
-    private void buttonAuthenticate_Click(object sender, EventArgs e)
-    {
-      FormAuthenticate formAuth = new FormAuthenticate(fFlickr);
-      DialogResult result = formAuth.ShowDialog();
-      if(result == DialogResult.OK)
+      if( String.IsNullOrEmpty(textBoxNewAlbum.Text) )
       {
-        // let's store this OAuthToken
-        FlickrManager.SaveAuthentication(fFlickr);
-
-        // try to get a list of photos
-        PhotosetCollection col = fFlickr.PhotosetsGetList();
-        MessageBox.Show(col.Count.ToString());
+        MessageBox.Show("Album name must have only the characters, numbers or spaces", "Album Name Error");
       }
       else
       {
+        bool found = false;
+        foreach (Album a in comboBoxAlbum.Items)
+        {
+          if(a.name == textBoxNewAlbum.Text)
+          {
+            found = true;
+          }
+        }
 
+        if (found)
+        {
+          MessageBox.Show("Album name must be unique", "Album Name Error");
+        }
+        else
+        {
+          comboBoxAlbum.Items.Add(new Album(textBoxNewAlbum.Text, ""));
+          comboBoxAlbum.SelectedIndex = comboBoxAlbum.Items.Count - 1;
+        }
+      }
+    }
+
+    private void buttonScan4x6_Click(object sender, EventArgs e)
+    {
+      Scan(new SizeInches(6,4));
+    }
+
+    private void buttonScan3x5_Click(object sender, EventArgs e)
+    {
+      Scan(new SizeInches(5, 3));
+    }
+
+    private void buttonScanCustom_Click(object sender, EventArgs e)
+    {
+      Scan(new SizeInches((double)numericUpDownWidth.Value, (double)numericUpDownHeight.Value));
+    }
+
+    private void buttonUpload_Click(object sender, EventArgs e)
+    {
+      if (comboBoxAlbum.SelectedItem != null && !String.IsNullOrEmpty( ((Album)comboBoxAlbum.SelectedItem).name ) ) 
+      {
+        // tell the worker to upload
+        myWorker.EnqueueMessage(new QueuedMessage("UPLOAD_SCANNED", comboBoxAlbum.SelectedItem));
+
+        pictureBoxLastUploaded.Image = PictureBoxPreview.Image;
+        pictureBoxLastUploaded.SizeMode = PictureBoxSizeMode.Zoom;
+        PictureBoxPreview.Image = null;
+      }
+      else
+      {
+        MessageBox.Show("An album must be selected to upload into.", "Select Album First");
       }
     }
   }

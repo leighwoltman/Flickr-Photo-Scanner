@@ -15,23 +15,15 @@ namespace PDFScanningApp
   public partial class FormAuthenticate : Form
   {
     private Flickr fFlickr;
-    private OAuthRequestToken requestToken;
+    
     private Timer timer;
     private ChromiumWebBrowser browser;
 
     public string responseCode;
 
-    public FormAuthenticate(Flickr fFlickr)
+    public FormAuthenticate(string url)
     {
       InitializeComponent();
-
-      this.fFlickr = fFlickr;
-      // clear any old token data
-      fFlickr.OAuthAccessToken = "";
-      fFlickr.OAuthAccessTokenSecret = "";
-      requestToken = fFlickr.OAuthGetRequestToken("oob");
-
-      string url = fFlickr.OAuthCalculateAuthorizationUrl(requestToken.Token, AuthLevel.Write);
 
       browser = new ChromiumWebBrowser(url);
 
@@ -39,7 +31,7 @@ namespace PDFScanningApp
       this.Controls.Add(browser);
 
       timer = new Timer();
-      timer.Interval = 500;
+      timer.Interval = 250;
       timer.Tick += timer_Tick;
       timer.Start();
     }
@@ -61,7 +53,7 @@ namespace PDFScanningApp
             {
               try
               {
-                var accessToken = fFlickr.OAuthGetAccessToken(requestToken, msg);
+                responseCode = msg;
                 this.DialogResult = DialogResult.OK;
               }
               catch(Exception ex)

@@ -96,6 +96,7 @@
     <Compile Include="Utils.SizeInches.cs" />
     <Compile Include="Utils.SizePixels.cs" />
     <Compile Include="Utils.TempFolder.cs" />
+    <Compile Include="Worker.cs" />
     <EmbeddedResource Include="FormAuthenticate.resx">
       <DependentUpon>FormAuthenticate.cs</DependentUpon>
     </EmbeddedResource>
