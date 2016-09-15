@@ -328,11 +328,21 @@ namespace PDFScanningApp
       else
       {
         bool found = false;
-        foreach (Album a in comboBoxAlbum.Items)
+        // if we have no albums
+        if ((comboBoxAlbum.Items.Count == 1) && (comboBoxAlbum.Items[0] == "No Albums"))
         {
-          if(a.name == textBoxNewAlbum.Text)
+          // then we have no albums, this will be the first
+          comboBoxAlbum.Items.Clear();
+          comboBoxAlbum.Enabled = true;
+        }
+        else
+        {
+          foreach (Album a in comboBoxAlbum.Items)
           {
-            found = true;
+            if (a.name == textBoxNewAlbum.Text)
+            {
+              found = true;
+            }
           }
         }
 
