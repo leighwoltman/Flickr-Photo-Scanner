@@ -34,7 +34,9 @@
       this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
       this.ButtonScanLetter = new System.Windows.Forms.Button();
       this.ButtonScanLegal = new System.Windows.Forms.Button();
+      this.buttonAuthenticate = new System.Windows.Forms.Button();
       ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+      this.splitContainer1.Panel1.SuspendLayout();
       this.splitContainer1.Panel2.SuspendLayout();
       this.splitContainer1.SuspendLayout();
       this.flowLayoutPanel1.SuspendLayout();
@@ -45,6 +47,10 @@
       this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
       this.splitContainer1.Location = new System.Drawing.Point(0, 0);
       this.splitContainer1.Name = "splitContainer1";
+      // 
+      // splitContainer1.Panel1
+      // 
+      this.splitContainer1.Panel1.Controls.Add(this.buttonAuthenticate);
       // 
       // splitContainer1.Panel2
       // 
@@ -95,6 +101,16 @@
       this.ButtonScanLegal.UseVisualStyleBackColor = true;
       this.ButtonScanLegal.Click += new System.EventHandler(this.ButtonScanLegal_Click);
       // 
+      // buttonAuthenticate
+      // 
+      this.buttonAuthenticate.Location = new System.Drawing.Point(12, 12);
+      this.buttonAuthenticate.Name = "buttonAuthenticate";
+      this.buttonAuthenticate.Size = new System.Drawing.Size(75, 23);
+      this.buttonAuthenticate.TabIndex = 0;
+      this.buttonAuthenticate.Text = "Authenticate";
+      this.buttonAuthenticate.UseVisualStyleBackColor = true;
+      this.buttonAuthenticate.Click += new System.EventHandler(this.buttonAuthenticate_Click);
+      // 
       // FormMain
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -106,6 +122,7 @@
       this.Text = "Form1";
       this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormMain_FormClosing);
       this.Load += new System.EventHandler(this.FormMain_Load);
+      this.splitContainer1.Panel1.ResumeLayout(false);
       this.splitContainer1.Panel2.ResumeLayout(false);
       this.splitContainer1.Panel2.PerformLayout();
       ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
@@ -122,6 +139,7 @@
     private System.Windows.Forms.Button ButtonScanLetter;
     private System.Windows.Forms.Button ButtonScanLegal;
     private System.Windows.Forms.Panel PanelPreview;
+    private System.Windows.Forms.Button buttonAuthenticate;
   }
 }
 

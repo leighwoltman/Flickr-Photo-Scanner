@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using Model;
 using Defines;
 using Utils;
+using FlickrNet;
 
 
 namespace PDFScanningApp
@@ -20,6 +21,7 @@ namespace PDFScanningApp
     private Scanner fScanner;
     private bool fClosing;
     private bool fDeleting;
+    private Flickr fFlickr;
 
     // Special UI
     private Cyotek.Windows.Forms.ImageBox PictureBoxPreview;
@@ -44,6 +46,19 @@ namespace PDFScanningApp
 
       fClosing = false;
       fDeleting = false;
+
+      fFlickr = FlickrManager.GetInstance(fAppSettings);
+
+      // try to see if this is active
+      try
+      {
+        PhotosetCollection col = fFlickr.PhotosetsGetList();
+        MessageBox.Show(col.Count.ToString());
+      }
+      catch(Exception FlickrException)
+      {
+        MessageBox.Show(FlickrException.Message);
+      }
     }
 
 
@@ -117,36 +132,10 @@ namespace PDFScanningApp
     {
       ScanSettings settings = new ScanSettings();
 
-      SizeInches size;
-
-      switch (pageType)
-      {
-        case PageTypeEnum.Letter:
-          {
-            size = SizeInches.Letter;
-          }
-          break;
-        case PageTypeEnum.Legal:
-          {
-            size = SizeInches.Legal;
-          }
-          break;
-        default:
-        case PageTypeEnum.Custom:
-          {
-            size = new SizeInches(fAppSettings.ScannerCustomPageSize.Width, fAppSettings.ScannerCustomPageSize.Height);
-          }
-          break;
-      }
+      SizeInches size = SizeInches.Letter;
 
       settings.ScanArea = new BoundsInches(0, 0, size);
-      settings.EnableFeeder = fAppSettings.ScannerEnableFeeder;
-      settings.ColorMode = fAppSettings.ScannerColorMode;
-      settings.Resolution = fAppSettings.ScannerResolution;
-      settings.Threshold = fAppSettings.ScannerThreshold;
-      settings.Brightness = fAppSettings.ScannerBrightness;
-      settings.Contrast = fAppSettings.ScannerContrast;
-      settings.ShowSettingsUI = fAppSettings.ScannerUseNativeUI;
+
       settings.ShowTransferUI = true;
 
       fScanner.Acquire(settings, fScanner_AcquireCallback);
@@ -178,6 +167,25 @@ namespace PDFScanningApp
     {
       Scan(PageTypeEnum.Legal);
       RefreshControls();
+    }
+
+    private void buttonAuthenticate_Click(object sender, EventArgs e)
+    {
+      FormAuthenticate formAuth = new FormAuthenticate(fFlickr);
+      DialogResult result = formAuth.ShowDialog();
+      if(result == DialogResult.OK)
+      {
+        // let's store this OAuthToken
+        FlickrManager.SaveAuthentication(fFlickr);
+
+        // try to get a list of photos
+        PhotosetCollection col = fFlickr.PhotosetsGetList();
+        MessageBox.Show(col.Count.ToString());
+      }
+      else
+      {
+
+      }
     }
   }
 }
