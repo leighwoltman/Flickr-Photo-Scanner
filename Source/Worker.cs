@@ -73,7 +73,7 @@ namespace PDFScanningApp
     private FormMain myParent;
     private Queue<QueuedMessage> queue;
     private Flickr fFlickr;
-    private State state = State.INIT;
+    private State state = State.PRE_INIT;
     private Album currentImageAlbum = null;
     private AppSettings fAppSettings;
     private OAuthRequestToken requestToken;
@@ -216,9 +216,16 @@ namespace PDFScanningApp
               // just wait until we get a message with an authentication token
               if(toProcess != null && toProcess.msg == "AUTHENTICATION_KEY")
               {
-                var accessToken = fFlickr.OAuthGetAccessToken(requestToken, (string)toProcess.payload);
-                // we are authenticated now, let's test it
-                state = State.TEST_AUTHENTICATION;
+                if (toProcess.payload == null)
+                {
+                  state = State.START_AUTHENTICATION;
+                }
+                else
+                {
+                  var accessToken = fFlickr.OAuthGetAccessToken(requestToken, (string)toProcess.payload);
+                  // we are authenticated now, let's test it
+                  state = State.TEST_AUTHENTICATION;
+                }
               }
             }
             break;
@@ -243,7 +250,7 @@ namespace PDFScanningApp
                 myParent.EnqueueMessage(new QueuedMessage("STATUS", uiStatus));
                 state = State.IDLE;
               }
-              catch (Exception FlickrException)
+              catch (Exception)
               {
                 // we aren't authenticated
                 state = State.START_AUTHENTICATION;

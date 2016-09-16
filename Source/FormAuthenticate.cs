@@ -8,14 +8,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using CefSharp.WinForms;
-using FlickrNet;
 
 namespace PDFScanningApp
 {
   public partial class FormAuthenticate : Form
   {
-    private Flickr fFlickr;
-    
     private Timer timer;
     private ChromiumWebBrowser browser;
 
@@ -71,6 +68,7 @@ namespace PDFScanningApp
       catch(Exception)
       {
         // do nothing
+        timer.Start();
       }
 
     }

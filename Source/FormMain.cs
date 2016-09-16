@@ -21,7 +21,6 @@ namespace PDFScanningApp
     private AppSettings fAppSettings;
     private Scanner fScanner;
     private bool fClosing;
-    private bool fDeleting;
     
     private Queue<QueuedMessage> messageQueue;
     private Worker myWorker;
@@ -61,7 +60,6 @@ namespace PDFScanningApp
       fScanner = new Scanner();
 
       fClosing = false;
-      fDeleting = false;
 
       messageQueue = new Queue<QueuedMessage>();
 
@@ -98,7 +96,14 @@ namespace PDFScanningApp
             {
               FormAuthenticate formAuth = new FormAuthenticate((string)msgToProcess.payload);
               DialogResult result = formAuth.ShowDialog();
-              myWorker.EnqueueMessage(new QueuedMessage("AUTHENTICATION_KEY", formAuth.responseCode));
+              if(result == DialogResult.OK)
+              {
+                myWorker.EnqueueMessage(new QueuedMessage("AUTHENTICATION_KEY", formAuth.responseCode));
+              }
+              else
+              {
+                myWorker.EnqueueMessage(new QueuedMessage("AUTHENTICATION_KEY", null));
+              }
             }
             break;
 
@@ -272,7 +277,7 @@ namespace PDFScanningApp
 
       if(albumList == null)
       {
-        if( (comboBoxAlbum.Items.Count == 1) && (comboBoxAlbum.Items[0] == "No Albums"))
+        if( (comboBoxAlbum.Items.Count == 1) && (((string)comboBoxAlbum.Items[0]) == "No Albums"))
         {
           // then we are good
         }
@@ -381,7 +386,7 @@ namespace PDFScanningApp
       {
         bool found = false;
         // if we have no albums
-        if ((comboBoxAlbum.Items.Count == 1) && (comboBoxAlbum.Items[0] == "No Albums"))
+        if ((comboBoxAlbum.Items.Count == 1) && (((string)comboBoxAlbum.Items[0]) == "No Albums"))
         {
           // then we have no albums, this will be the first
           comboBoxAlbum.Items.Clear();

@@ -11,7 +11,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>PDFScanningApp</RootNamespace>
-    <AssemblyName>PDF-Scanning-App</AssemblyName>
+    <AssemblyName>Flickr-Photo-Scanner</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -31,8 +31,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>
-    </ApplicationIcon>
+    <ApplicationIcon>External\Icon\Gakuseisean-Aire-Images.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Cyotek.Windows.Forms.ImageBox">
