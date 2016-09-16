@@ -191,19 +191,25 @@ namespace PDFScanningApp
 
     private void fScanner_OpenCallback(bool success)
     {
+      bool found = false;
+
       if (success)
       {
-        foreach (string item in fScanner.GetDataSourceNames())
-        {
-          //ComboBoxScanners.Items.Add(item);
+        List<string> scanners = fScanner.GetDataSourceNames();
 
-          if (item == fAppSettings.CurrentScanner)
+        foreach (string scanner in scanners)
+        {
+          if (scanner.Contains("WIA") && scanner.Contains("EPSON") && scanner.Contains("Perfection V500"))
           {
-            //ComboBoxScanners.SelectedItem = item;
+            found = true;
           }
         }
+      }
 
-        RefreshScanner();
+      if(!success || !found)
+      {
+        MessageBox.Show("The scanner does not seem to be connected or powered up. Check connections and maybe unplug and replug them. Then try the program again.", "Scanner Not Found");
+        Application.Exit();
       }
     }
 
