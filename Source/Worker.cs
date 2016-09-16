@@ -56,6 +56,7 @@ namespace PDFScanningApp
 
   public enum State
   {
+    PRE_INIT,
     INIT,
     NOT_AUTHENTICATED,
     TEST_AUTHENTICATION,
@@ -159,6 +160,18 @@ namespace PDFScanningApp
 
         switch(state)
         {
+          case State.PRE_INIT:
+            {
+              if(toProcess != null)
+              {
+                if(toProcess.msg == "START")
+                {
+                  state = State.INIT;
+                }
+              }
+            }
+            break;
+
           case State.INIT:
             {
               // if there was a photo uploading, we want to remove any scanned image

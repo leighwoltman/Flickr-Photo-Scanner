@@ -211,6 +211,10 @@ namespace PDFScanningApp
         MessageBox.Show("The scanner does not seem to be connected or powered up. Check connections and maybe unplug and replug them. Then try the program again.", "Scanner Not Found");
         Application.Exit();
       }
+      else
+      {
+        myWorker.EnqueueMessage(new QueuedMessage("START", null));
+      }
     }
 
 
