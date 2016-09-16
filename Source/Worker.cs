@@ -140,6 +140,20 @@ namespace PDFScanningApp
                 myParent.EnqueueMessage(new QueuedMessage("STATUS", uiStatus));
               }
               break;
+
+            case "CUSTOM_WIDTH":
+              {
+                double width = (double)toProcess.payload;
+                fAppSettings.CustomWidth = width;
+              }
+              break;
+
+            case "CUSTOM_HEIGHT":
+              {
+                double height = (double)toProcess.payload;
+                fAppSettings.CustomHeight = height;
+              }
+              break;
           }
         }
 
@@ -147,6 +161,39 @@ namespace PDFScanningApp
         {
           case State.INIT:
             {
+              // if there was a photo uploading, we want to remove any scanned image
+              string starting_fileName = Path.Combine(Utils.TempFolder.GetPath(), "scanned.jpg");
+              string uploading_fileName = Path.Combine(Utils.TempFolder.GetPath(), "uploading.jpg");
+              string lastuploaded_fileName = Path.Combine(Utils.TempFolder.GetPath(), "lastuploaded.jpg");
+
+              if (File.Exists(uploading_fileName))
+              {
+                if(File.Exists(starting_fileName))
+                {
+                  File.Delete(starting_fileName);
+                  int count = 0;
+
+                  while (File.Exists(uploading_fileName) && count < 100000000)
+                  {
+                    count++;
+                  }
+                }
+
+                File.Move(uploading_fileName, starting_fileName);
+              }
+
+              if (File.Exists(lastuploaded_fileName))
+              {
+                Image lastUploaded = Image.FromFile(lastuploaded_fileName);
+                myParent.EnqueueMessage(new QueuedMessage("LAST_UPLOADED", lastUploaded));
+              }
+
+              if (File.Exists(starting_fileName))
+              {
+                Image scanned = Image.FromFile(starting_fileName);
+                myParent.EnqueueMessage(new QueuedMessage("SCANNED_IMAGE_RETURN", scanned));
+              }
+
               state = State.TEST_AUTHENTICATION;
             }
             break;
@@ -211,6 +258,7 @@ namespace PDFScanningApp
                 uiStatus.uploading = true;
                 myParent.EnqueueMessage(new QueuedMessage("STATUS", uiStatus));
                 currentImageAlbum = (Album)toProcess.payload;
+                fAppSettings.SelectedAlbumName = currentImageAlbum.name;
                 state = State.UPLOADING_PICTURE;
               }
             }
@@ -218,64 +266,79 @@ namespace PDFScanningApp
 
           case State.UPLOADING_PICTURE:
             {
-              string starting_fileName = Path.Combine(Utils.TempFolder.GetPath(), "scanned.jpg");
-              string uploading_fileName = Path.Combine(Utils.TempFolder.GetPath(), "uploading.jpg");
-
-              // need to try and delete any uploading file
-              File.Delete(uploading_fileName);
-              int count = 0;
-
-              while (File.Exists(uploading_fileName))
+              try
               {
-                count++;
+                string starting_fileName = Path.Combine(Utils.TempFolder.GetPath(), "scanned.jpg");
+                string uploading_fileName = Path.Combine(Utils.TempFolder.GetPath(), "uploading.jpg");
+
+                // need to try and delete any uploading file
+                File.Delete(uploading_fileName);
+                int count = 0;
+
+                while (File.Exists(uploading_fileName) && count < 100000000)
+                {
+                  count++;
+                }
+
+                if (count >= 100000000)
+                {
+
+                }
+
+                File.Move(starting_fileName, uploading_fileName);
+
+                string photoId = fFlickr.UploadPicture(uploading_fileName, "", "", null, false, false, false);
+
+                // now that the photo has been uploaded, we need to decide whether we should assign it to an album (photoset)
+                // or create a new album
+                bool albumAdd = false;
+
+                if (String.IsNullOrEmpty(currentImageAlbum.id))
+                {
+                  albumAdd = true;
+                  fFlickr.PhotosetsCreate(currentImageAlbum.name, photoId);
+                }
+                else
+                {
+                  fFlickr.PhotosetsAddPhoto(currentImageAlbum.id, photoId);
+                }
+
+                // if this was a success, then we rename the photo
+                string lastuploaded_fileName = Path.Combine(Utils.TempFolder.GetPath(), "lastuploaded.jpg");
+
+                // need to try and delete any uploading file
+                File.Delete(lastuploaded_fileName);
+                count = 0;
+
+                while (File.Exists(lastuploaded_fileName))
+                {
+                  count++;
+                }
+
+                File.Move(uploading_fileName, lastuploaded_fileName);
+
+                uiStatus.uploading = false;
+                // set the authentication to false so we will upload the new photo
+
+                if (albumAdd)
+                {
+                  uiStatus.authenticated = false;
+                  state = State.TEST_AUTHENTICATION;
+                }
+                else
+                {
+                  state = State.IDLE;
+                }
+
+                myParent.EnqueueMessage(new QueuedMessage("STATUS", uiStatus));
               }
-
-              File.Move(starting_fileName, uploading_fileName);
-
-              string photoId = fFlickr.UploadPicture(uploading_fileName, "", "", null, false, false, false);
-              
-              // now that the photo has been uploaded, we need to decide whether we should assign it to an album (photoset)
-              // or create a new album
-              bool albumAdd = false;
-
-              if(String.IsNullOrEmpty(currentImageAlbum.id))
+              catch(Exception e)
               {
-                albumAdd = true;
-                fFlickr.PhotosetsCreate(currentImageAlbum.name, photoId);
-              }
-              else
-              {
-                fFlickr.PhotosetsAddPhoto(currentImageAlbum.id, photoId);
-              }
-
-              // if this was a success, then we rename the photo
-              string lastuploaded_fileName = Path.Combine(Utils.TempFolder.GetPath(), "lastuploaded.jpg");
-
-              // need to try and delete any uploading file
-              File.Delete(lastuploaded_fileName);
-              count = 0;
-
-              while (File.Exists(lastuploaded_fileName))
-              {
-                count++;
-              }
-              
-              File.Move(uploading_fileName, lastuploaded_fileName);
-              
-              uiStatus.uploading = false;
-              // set the authentication to false so we will upload the new photo
-
-              if (albumAdd)
-              {
+                // a generic error occured 
+                myParent.EnqueueMessage(new QueuedMessage("ERROR", e.Message));
                 uiStatus.authenticated = false;
-                state = State.TEST_AUTHENTICATION;
+                uiStatus.uploading = false;
               }
-              else
-              {
-                state = State.IDLE;
-              }
-
-              myParent.EnqueueMessage(new QueuedMessage("STATUS", uiStatus));
             }
             break;
         }

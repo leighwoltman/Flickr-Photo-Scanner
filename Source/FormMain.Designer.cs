@@ -54,7 +54,7 @@
       // 
       // buttonUpload
       // 
-      this.buttonUpload.Location = new System.Drawing.Point(202, 71);
+      this.buttonUpload.Location = new System.Drawing.Point(202, 48);
       this.buttonUpload.Name = "buttonUpload";
       this.buttonUpload.Size = new System.Drawing.Size(50, 79);
       this.buttonUpload.TabIndex = 0;

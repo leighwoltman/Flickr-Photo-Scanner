@@ -27,6 +27,7 @@ namespace PDFScanningApp
     private Worker myWorker;
     private System.Windows.Forms.Timer myTimer;
     private List<Album> albumList;
+    private string defaultAlbum;
 
     // Special UI
     private Cyotek.Windows.Forms.ImageBox PictureBoxPreview;
@@ -52,6 +53,10 @@ namespace PDFScanningApp
       this.PanelPreview.Controls.Add(this.PictureBoxPreview);
 
       fAppSettings = new AppSettings();
+
+      defaultAlbum = fAppSettings.SelectedAlbumName;
+      numericUpDownHeight.Value = (decimal)fAppSettings.CustomHeight;
+      numericUpDownWidth.Value = (decimal)fAppSettings.CustomWidth;
 
       fScanner = new Scanner();
 
@@ -105,13 +110,35 @@ namespace PDFScanningApp
 
           case "ALBUM_LIST":
             {
+              // save the last album we had selected
+              string selected_name = defaultAlbum;
+
+              if (comboBoxAlbum.Enabled)
+              {
+                if(comboBoxAlbum.SelectedItem != null)
+                {
+                  selected_name = ((Album)comboBoxAlbum.SelectedItem).name;
+                }
+              }
+
               albumList = (List<Album>)msgToProcess.payload;
 
               // populate the dropdown
               comboBoxAlbum.Items.Clear();
+              int toBeSelected = -1;
+              int count = 0;
               foreach(Album a in albumList)
               {
                 comboBoxAlbum.Items.Add(a);
+                if(a.name == selected_name)
+                {
+                  toBeSelected = count;
+                }
+                count++;
+              }
+              if(toBeSelected != -1)
+              {
+                comboBoxAlbum.SelectedIndex = toBeSelected;
               }
             }
             break;
@@ -121,6 +148,21 @@ namespace PDFScanningApp
               Image img = (Image)msgToProcess.payload;
               PictureBoxPreview.Image = img;
               PictureBoxPreview.ZoomToFit();
+            }
+            break;
+
+          case "LAST_UPLOADED":
+            {
+              Image img = (Image)msgToProcess.payload;
+              pictureBoxLastUploaded.Image = img;
+              pictureBoxLastUploaded.SizeMode = PictureBoxSizeMode.Zoom;
+            }
+            break;
+
+          case "ERROR":
+            {
+              string message = (string)msgToProcess.payload;
+              MessageBox.Show("An error occured, the program will try to recover, but consider shutting it down and restarting. The error message was: " + message, "Error");
             }
             break;
         }
@@ -360,17 +402,21 @@ namespace PDFScanningApp
 
     private void buttonScan4x6_Click(object sender, EventArgs e)
     {
-      Scan(new SizeInches(6,4));
+      Scan(new SizeInches(5.79, 3.92));
     }
 
     private void buttonScan3x5_Click(object sender, EventArgs e)
     {
-      Scan(new SizeInches(5, 3));
+      Scan(new SizeInches(4.92, 3.44));
     }
 
     private void buttonScanCustom_Click(object sender, EventArgs e)
     {
-      Scan(new SizeInches((double)numericUpDownWidth.Value, (double)numericUpDownHeight.Value));
+      double width = (double)numericUpDownWidth.Value;
+      double height = (double)numericUpDownHeight.Value;
+      myWorker.EnqueueMessage(new QueuedMessage("CUSTOM_WIDTH", width));
+      myWorker.EnqueueMessage(new QueuedMessage("CUSTOM_HEIGHT", height));
+      Scan(new SizeInches(width, height));
     }
 
     private void buttonUpload_Click(object sender, EventArgs e)

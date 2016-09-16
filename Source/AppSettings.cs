@@ -36,5 +36,23 @@ namespace PDFScanningApp
       get { return fTable.Get("OAuthAccessTokenSecret", ""); }
       set { fTable.Set("OAuthAccessTokenSecret", value); }
     }
+
+    public string SelectedAlbumName
+    {
+      get { return fTable.Get("SelectedAlbumName", ""); }
+      set { fTable.Set("SelectedAlbumName", value); }
+    }
+
+    public double CustomWidth
+    {
+      get { return fTable.GetDouble("CustomWidth", 1.0); }
+      set { fTable.SetDouble("CustomWidth", value); }
+    }
+
+    public double CustomHeight
+    {
+      get { return fTable.GetDouble("CustomHeight", 1.0); }
+      set { fTable.SetDouble("CustomHeight", value); }
+    }
   }
 }
