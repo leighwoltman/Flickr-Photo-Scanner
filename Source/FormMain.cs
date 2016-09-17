@@ -118,7 +118,11 @@ namespace PDFScanningApp
               // save the last album we had selected
               string selected_name = defaultAlbum;
 
-              if (comboBoxAlbum.Enabled)
+              if ((comboBoxAlbum.Items.Count == 1) && (comboBoxAlbum.Items[0].ToString() == "No Albums"))
+              {
+                // we don't have any items
+              }
+              else
               {
                 if(comboBoxAlbum.SelectedItem != null)
                 {
@@ -277,7 +281,7 @@ namespace PDFScanningApp
 
       if(albumList == null)
       {
-        if( (comboBoxAlbum.Items.Count == 1) && (((string)comboBoxAlbum.Items[0]) == "No Albums"))
+        if( (comboBoxAlbum.Items.Count == 1) && (comboBoxAlbum.Items[0].ToString() == "No Albums"))
         {
           // then we are good
         }
@@ -386,7 +390,7 @@ namespace PDFScanningApp
       {
         bool found = false;
         // if we have no albums
-        if ((comboBoxAlbum.Items.Count == 1) && (((string)comboBoxAlbum.Items[0]) == "No Albums"))
+        if ((comboBoxAlbum.Items.Count == 1) && (comboBoxAlbum.Items[0].ToString() == "No Albums"))
         {
           // then we have no albums, this will be the first
           comboBoxAlbum.Items.Clear();

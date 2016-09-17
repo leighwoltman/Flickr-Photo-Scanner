@@ -194,7 +194,10 @@ namespace Model
 
     private void fActiveDataSource_OnScanningComplete(object sender, EventArgs e)
     {
-      Raise_OnScanningComplete(args.TheImage);
+      if (args != null)
+      {
+        Raise_OnScanningComplete(args.TheImage);
+      }
     }
 
 

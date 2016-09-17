@@ -197,13 +197,13 @@ namespace PDFScanningApp
 
               if (File.Exists(lastuploaded_fileName))
               {
-                Image lastUploaded = Image.FromFile(lastuploaded_fileName);
+                Image lastUploaded = Utils.Imaging.LoadImageFromFile(lastuploaded_fileName);
                 myParent.EnqueueMessage(new QueuedMessage("LAST_UPLOADED", lastUploaded));
               }
 
               if (File.Exists(starting_fileName))
               {
-                Image scanned = Image.FromFile(starting_fileName);
+                Image scanned = Utils.Imaging.LoadImageFromFile(starting_fileName);
                 myParent.EnqueueMessage(new QueuedMessage("SCANNED_IMAGE_RETURN", scanned));
               }
 
