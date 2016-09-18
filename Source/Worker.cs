@@ -129,7 +129,7 @@ namespace PDFScanningApp
                 // save out this scanned image
                 Image img = (Image)toProcess.payload;
 
-                byte[] byteArray = Imaging.EncodeImage(img, System.Drawing.Imaging.ImageFormat.Jpeg, 90);
+                byte[] byteArray = Imaging.EncodeImage(img, System.Drawing.Imaging.ImageFormat.Jpeg, 100);
                 string fileName = Path.Combine(Utils.TempFolder.GetPath(), "scanned.jpg");
                 Imaging.SaveImageByteArrayToFile(fileName, byteArray);
 
@@ -186,7 +186,7 @@ namespace PDFScanningApp
                   File.Delete(starting_fileName);
                   int count = 0;
 
-                  while (File.Exists(uploading_fileName) && count < 100000000)
+                  while (File.Exists(starting_fileName) && count < 100000000)
                   {
                     count++;
                   }
@@ -356,6 +356,7 @@ namespace PDFScanningApp
               {
                 // a generic error occured 
                 myParent.EnqueueMessage(new QueuedMessage("ERROR", e.Message));
+                state = State.INIT;
                 uiStatus.authenticated = false;
                 uiStatus.uploading = false;
               }
