@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -52,6 +53,7 @@ namespace PDFScanningApp
     public bool uploading;
     public bool uploadingImage;
     public bool scannedImage;
+    public string downloadStatus = "";
   }
 
   public enum State
@@ -64,7 +66,9 @@ namespace PDFScanningApp
     UPLOADING_PICTURE,
     ATTEMPTING_NEW_ALBUM,
     SETTING_PICTURE_ALBUM,
-    IDLE
+    IDLE,
+    DOWNLOADING,
+    DOWNLOADNEXT,
   }
 
   class Worker
@@ -78,6 +82,10 @@ namespace PDFScanningApp
     private AppSettings fAppSettings;
     private OAuthRequestToken requestToken;
     private UIStatus uiStatus = null;
+    private List<Album> myAlbums;
+    private string downloadFolder;
+    private Queue<Album> photoIDsToDownload;
+    private double totalPhotosToDownload;
 
     public Worker(FormMain parent, AppSettings fAppSettings)
     {
@@ -242,6 +250,7 @@ namespace PDFScanningApp
                 {
                   list.Add(new Album(set.Title, set.PhotosetId));
                 }
+                myAlbums = list;
                 if (list.Count > 0)
                 {
                   myParent.EnqueueMessage(new QueuedMessage("ALBUM_LIST", list));
@@ -280,6 +289,14 @@ namespace PDFScanningApp
                 currentImageAlbum = (Album)toProcess.payload;
                 fAppSettings.SelectedAlbumName = currentImageAlbum.name;
                 state = State.UPLOADING_PICTURE;
+              }
+              else if (toProcess != null && toProcess.msg == "DOWNLOAD_ALL")
+              {
+                uiStatus.uploading = true;
+                uiStatus.downloadStatus = "Starting to retrieve list of photos";
+                myParent.EnqueueMessage(new QueuedMessage("STATUS", uiStatus));
+                downloadFolder = (string)toProcess.payload;
+                state = State.DOWNLOADING;
               }
             }
             break;
@@ -360,6 +377,81 @@ namespace PDFScanningApp
                 uiStatus.authenticated = false;
                 uiStatus.uploading = false;
               }
+            }
+            break;
+          case State.DOWNLOADING:
+            {
+              photoIDsToDownload = new Queue<Album>();
+
+              // let's work through all the pictures
+              foreach(Album album in this.myAlbums)
+              {
+                PhotosetPhotoCollection photos = fFlickr.PhotosetsGetPhotos(album.id);
+                for (int i = 0; i < photos.Count; i++ )
+                {
+                  photoIDsToDownload.Enqueue(new Album(album.name, photos[i].PhotoId));
+                }
+              }
+
+              totalPhotosToDownload = photoIDsToDownload.Count;
+              this.state = State.DOWNLOADNEXT;
+            }
+            break;
+
+          case State.DOWNLOADNEXT:
+            {
+              if(photoIDsToDownload.Count > 0)
+              {
+                Album photoToDownload = photoIDsToDownload.Dequeue();
+
+                string directory = Path.Combine(downloadFolder, photoToDownload.name);
+
+                if(!Directory.Exists(directory))
+                {
+                  Directory.CreateDirectory(directory);
+                }
+
+                // now create the filename
+                string fileName = Path.Combine(directory, photoToDownload.id + ".jpg");
+
+                double temp = photoIDsToDownload.Count;
+                temp = (totalPhotosToDownload - temp) / totalPhotosToDownload * 100;
+
+                if ( File.Exists(fileName) && (new FileInfo(fileName).Length) > 2000 )
+                {
+                  uiStatus.downloadStatus = "File exists " + photoToDownload.id + " (" + temp.ToString("0.00") + "%)";
+                }
+                else
+                {
+                  uiStatus.downloadStatus = "Downloading photo " + photoToDownload.id + " (" + temp.ToString("0.00") + "%)";
+
+                  // need to get the URL
+                  SizeCollection size = fFlickr.PhotosGetSizes(photoToDownload.id);
+
+                  string url = "";
+
+                  foreach (FlickrNet.Size siz in size)
+                  {
+                    if (siz.Label == "Original")
+                    {
+                      url = siz.Source;
+                      break;
+                    }
+                  }
+
+                  using (var client = new WebClient())
+                  {
+                    client.DownloadFile(url, fileName);
+                  }
+                }
+              }
+              else
+              {
+                uiStatus.uploading = false;
+                uiStatus.downloadStatus = "Done";
+                state = State.IDLE;
+              }
+              myParent.EnqueueMessage(new QueuedMessage("STATUS", uiStatus));
             }
             break;
         }

@@ -20,6 +20,7 @@ namespace PDFScanningApp
   {
     private AppSettings fAppSettings;
     private Scanner fScanner;
+    private bool scannerFound = true;
     private bool fClosing;
     
     private Queue<QueuedMessage> messageQueue;
@@ -27,6 +28,7 @@ namespace PDFScanningApp
     private System.Windows.Forms.Timer myTimer;
     private List<Album> albumList;
     private string defaultAlbum;
+    private SizeInches lastSize = null;
 
     // Special UI
     private Cyotek.Windows.Forms.ImageBox PictureBoxPreview;
@@ -218,7 +220,9 @@ namespace PDFScanningApp
       if(!success || !found)
       {
         MessageBox.Show("The scanner does not seem to be connected or powered up. Check connections and maybe unplug and replug them. Then try the program again.", "Scanner Not Found");
-        Application.Exit();
+        scannerFound = false;
+        myWorker.EnqueueMessage(new QueuedMessage("START", null));
+        //Application.Exit();
       }
       else
       {
@@ -266,7 +270,13 @@ namespace PDFScanningApp
     {
       if(status != null)
       {
+        saveAllButton.Enabled = status.authenticated && !status.uploading;
+        labelDownloadStatus.Text = status.downloadStatus;
+
+        status.authenticated = status.authenticated & scannerFound;
+
         buttonUpload.Enabled = (status.authenticated && !status.uploading && status.scannedImage);
+        buttonUploadAndScan.Enabled = (status.authenticated && !status.uploading && status.scannedImage && lastSize != null);
         comboBoxAlbum.Enabled = (status.authenticated && (albumList != null));
         textBoxNewAlbum.Enabled = (status.authenticated && !status.uploading);
         buttonCreateAlbum.Enabled = (status.authenticated && !status.uploading);
@@ -298,7 +308,9 @@ namespace PDFScanningApp
 
     void PauseControls()
     {
+      saveAllButton.Enabled = false;
       buttonUpload.Enabled = false;
+      buttonUploadAndScan.Enabled = false;
       comboBoxAlbum.Enabled = false;
       textBoxNewAlbum.Enabled = false;
       buttonCreateAlbum.Enabled = false;
@@ -421,12 +433,14 @@ namespace PDFScanningApp
 
     private void buttonScan4x6_Click(object sender, EventArgs e)
     {
-      Scan(new SizeInches(5.79, 3.92));
+      lastSize = new SizeInches(5.79, 3.92);
+      Scan(lastSize);
     }
 
     private void buttonScan3x5_Click(object sender, EventArgs e)
     {
-      Scan(new SizeInches(4.92, 3.44));
+      lastSize = new SizeInches(4.92, 3.44);
+      Scan(lastSize);
     }
 
     private void buttonScanCustom_Click(object sender, EventArgs e)
@@ -435,7 +449,8 @@ namespace PDFScanningApp
       double height = (double)numericUpDownHeight.Value;
       myWorker.EnqueueMessage(new QueuedMessage("CUSTOM_WIDTH", width));
       myWorker.EnqueueMessage(new QueuedMessage("CUSTOM_HEIGHT", height));
-      Scan(new SizeInches(width, height));
+      lastSize = new SizeInches(width, height);
+      Scan(lastSize);
     }
 
     private void buttonUpload_Click(object sender, EventArgs e)
@@ -453,6 +468,24 @@ namespace PDFScanningApp
       {
         MessageBox.Show("An album must be selected to upload into.", "Select Album First");
       }
+    }
+
+    private void saveAllButton_Click(object sender, EventArgs e)
+    {
+      FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
+      DialogResult result = folderBrowserDialog1.ShowDialog();
+      PauseControls();
+      if (result == DialogResult.OK)
+      {
+        string folderName = folderBrowserDialog1.SelectedPath;
+        myWorker.EnqueueMessage(new QueuedMessage("DOWNLOAD_ALL", folderName));
+      }
+    }
+
+    private void buttonUploadAndScan_Click(object sender, EventArgs e)
+    {
+      buttonUpload_Click(sender, e);
+      Scan(lastSize);
     }
   }
 }

@@ -47,6 +47,9 @@
       this.numericUpDownHeight = new System.Windows.Forms.NumericUpDown();
       this.buttonCreateAlbum = new System.Windows.Forms.Button();
       this.label6 = new System.Windows.Forms.Label();
+      this.saveAllButton = new System.Windows.Forms.Button();
+      this.labelDownloadStatus = new System.Windows.Forms.Label();
+      this.buttonUploadAndScan = new System.Windows.Forms.Button();
       ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLastUploaded)).BeginInit();
       ((System.ComponentModel.ISupportInitialize)(this.numericUpDownWidth)).BeginInit();
       ((System.ComponentModel.ISupportInitialize)(this.numericUpDownHeight)).BeginInit();
@@ -56,7 +59,7 @@
       // 
       this.buttonUpload.Location = new System.Drawing.Point(202, 48);
       this.buttonUpload.Name = "buttonUpload";
-      this.buttonUpload.Size = new System.Drawing.Size(50, 79);
+      this.buttonUpload.Size = new System.Drawing.Size(50, 51);
       this.buttonUpload.TabIndex = 0;
       this.buttonUpload.Text = "Upload <<";
       this.buttonUpload.UseVisualStyleBackColor = true;
@@ -253,11 +256,42 @@
       this.label6.TabIndex = 17;
       this.label6.Text = "Note: Albums only get created on Flickr when you scan the first photo into it.";
       // 
+      // saveAllButton
+      // 
+      this.saveAllButton.Location = new System.Drawing.Point(13, 396);
+      this.saveAllButton.Name = "saveAllButton";
+      this.saveAllButton.Size = new System.Drawing.Size(239, 23);
+      this.saveAllButton.TabIndex = 18;
+      this.saveAllButton.Text = "Save All Pictures";
+      this.saveAllButton.UseVisualStyleBackColor = true;
+      this.saveAllButton.Click += new System.EventHandler(this.saveAllButton_Click);
+      // 
+      // labelDownloadStatus
+      // 
+      this.labelDownloadStatus.AutoSize = true;
+      this.labelDownloadStatus.Location = new System.Drawing.Point(12, 422);
+      this.labelDownloadStatus.Name = "labelDownloadStatus";
+      this.labelDownloadStatus.Size = new System.Drawing.Size(0, 13);
+      this.labelDownloadStatus.TabIndex = 19;
+      // 
+      // buttonUploadAndScan
+      // 
+      this.buttonUploadAndScan.Location = new System.Drawing.Point(202, 105);
+      this.buttonUploadAndScan.Name = "buttonUploadAndScan";
+      this.buttonUploadAndScan.Size = new System.Drawing.Size(50, 99);
+      this.buttonUploadAndScan.TabIndex = 20;
+      this.buttonUploadAndScan.Text = "Upload and Scan <<";
+      this.buttonUploadAndScan.UseVisualStyleBackColor = true;
+      this.buttonUploadAndScan.Click += new System.EventHandler(this.buttonUploadAndScan_Click);
+      // 
       // FormMain
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
       this.ClientSize = new System.Drawing.Size(832, 451);
+      this.Controls.Add(this.buttonUploadAndScan);
+      this.Controls.Add(this.labelDownloadStatus);
+      this.Controls.Add(this.saveAllButton);
       this.Controls.Add(this.label6);
       this.Controls.Add(this.buttonCreateAlbum);
       this.Controls.Add(this.label5);
@@ -311,6 +345,9 @@
     private System.Windows.Forms.NumericUpDown numericUpDownHeight;
     private System.Windows.Forms.Button buttonCreateAlbum;
     private System.Windows.Forms.Label label6;
+    private System.Windows.Forms.Button saveAllButton;
+    private System.Windows.Forms.Label labelDownloadStatus;
+    private System.Windows.Forms.Button buttonUploadAndScan;
 
   }
 }
