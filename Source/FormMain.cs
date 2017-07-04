@@ -273,18 +273,18 @@ namespace PDFScanningApp
         saveAllButton.Enabled = status.authenticated && !status.uploading;
         labelDownloadStatus.Text = status.downloadStatus;
 
-        status.authenticated = status.authenticated & scannerFound;
+        var authenticated = status.authenticated & scannerFound;
 
-        buttonUpload.Enabled = (status.authenticated && !status.uploading && status.scannedImage);
-        buttonUploadAndScan.Enabled = (status.authenticated && !status.uploading && status.scannedImage && lastSize != null);
-        comboBoxAlbum.Enabled = (status.authenticated && (albumList != null));
-        textBoxNewAlbum.Enabled = (status.authenticated && !status.uploading);
-        buttonCreateAlbum.Enabled = (status.authenticated && !status.uploading);
-        buttonScan4x6.Enabled = (status.authenticated);
-        buttonScan3x5.Enabled = (status.authenticated);
-        buttonScanCustom.Enabled = (status.authenticated);
-        numericUpDownHeight.Enabled = (status.authenticated);
-        numericUpDownWidth.Enabled = (status.authenticated);
+        buttonUpload.Enabled = (authenticated && !status.uploading && status.scannedImage);
+        buttonUploadAndScan.Enabled = (authenticated && !status.uploading && status.scannedImage && lastSize != null);
+        comboBoxAlbum.Enabled = (authenticated && (albumList != null));
+        textBoxNewAlbum.Enabled = (authenticated && !status.uploading);
+        buttonCreateAlbum.Enabled = (authenticated && !status.uploading);
+        buttonScan4x6.Enabled = (authenticated);
+        buttonScan3x5.Enabled = (authenticated);
+        buttonScanCustom.Enabled = (authenticated);
+        numericUpDownHeight.Enabled = (authenticated);
+        numericUpDownWidth.Enabled = (authenticated);
 
         progressBarUploading.Visible = (status.uploading);
       }
