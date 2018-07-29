@@ -104,7 +104,16 @@ namespace PDFScanningApp
               }
               else
               {
-                myWorker.EnqueueMessage(new QueuedMessage("AUTHENTICATION_KEY", null));
+                result = MessageBox.Show("Authentication failed, would you like to authenticate maually?", "Authentication Failed", MessageBoxButtons.YesNo);
+                if (result == DialogResult.Yes)
+                {
+                  string manual = this.ShowInputDialog((string)msgToProcess.payload, "9 digit key with hyphens");
+                  myWorker.EnqueueMessage(new QueuedMessage("AUTHENTICATION_KEY", manual));
+                }
+                else
+                {
+                  myWorker.EnqueueMessage(new QueuedMessage("AUTHENTICATION_KEY", null));
+                }
               }
             }
             break;
@@ -486,6 +495,31 @@ namespace PDFScanningApp
     {
       buttonUpload_Click(sender, e);
       Scan(lastSize);
+    }
+
+    private string ShowInputDialog(string text, string caption)
+    {
+      Form prompt = new Form()
+      {
+          Width = 500,
+          Height = 150,
+          FormBorderStyle = FormBorderStyle.FixedDialog,
+          Text = caption,
+          StartPosition = FormStartPosition.CenterScreen
+      };
+      //Label textLabel = new Label() { Left = 50, Top = 20, Text = text };
+      TextBox textBox = new TextBox() { Left = 50, Top = 50, Width = 400 };
+      TextBox urlBox = new TextBox() { Left = 50, Top = 20, Width = 400 };
+      urlBox.ReadOnly = true;
+      urlBox.Text = text;
+      Button confirmation = new Button() { Text = "Ok", Left = 350, Width = 100, Top = 70, DialogResult = DialogResult.OK };
+      confirmation.Click += (sender, e) => { prompt.Close(); };
+      prompt.Controls.Add(textBox);
+      prompt.Controls.Add(confirmation);
+      prompt.Controls.Add(urlBox);
+      prompt.AcceptButton = confirmation;
+
+      return prompt.ShowDialog() == DialogResult.OK ? textBox.Text : "";
     }
   }
 }

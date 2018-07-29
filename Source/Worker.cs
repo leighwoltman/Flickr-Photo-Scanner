@@ -425,23 +425,30 @@ namespace PDFScanningApp
                 {
                   uiStatus.downloadStatus = "Downloading photo " + photoToDownload.id + " (" + temp.ToString("0.00") + "%)";
 
-                  // need to get the URL
-                  SizeCollection size = fFlickr.PhotosGetSizes(photoToDownload.id);
-
-                  string url = "";
-
-                  foreach (FlickrNet.Size siz in size)
+                  try
                   {
-                    if (siz.Label == "Original")
+                    // need to get the URL
+                    SizeCollection size = fFlickr.PhotosGetSizes(photoToDownload.id);
+
+                    string url = "";
+
+                    foreach (FlickrNet.Size siz in size)
                     {
-                      url = siz.Source;
-                      break;
+                      if (siz.Label == "Original")
+                      {
+                        url = siz.Source;
+                        break;
+                      }
+                    }
+
+                    using (var client = new WebClient())
+                    {
+                      client.DownloadFile(url, fileName);
                     }
                   }
-
-                  using (var client = new WebClient())
+                  catch(Exception)
                   {
-                    client.DownloadFile(url, fileName);
+                    // do nothing now, future maybe keep a counter on this file and fail it after a while
                   }
                 }
               }
